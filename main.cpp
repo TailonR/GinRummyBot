@@ -11,42 +11,13 @@ int checking(int n) {
 //Can define doctest to_string to stringify your types
 
 TEST_CASE("Checking if doctest works") {
-            CHECK(checking(4) == 16);
-            CHECK(checking(5) == 20);
-            CHECK(checking(16) == 64);
+    CHECK(checking(4) == 16);
+    CHECK(checking(5) == 20);
+    CHECK(checking(16) == 64);
 }
 
 TEST_CASE("Checking Game Construction: number of players") {
-            CHECK(Game(1).getNumPlayers() == 0);
-            CHECK(Game(2).getNumPlayers() == 2);
-            CHECK(Game(3).getNumPlayers() == 3);
-            CHECK(Game(4).getNumPlayers() == 4);
-            CHECK(Game(5).getNumPlayers() == 0);
-            CHECK(Game(6).getNumPlayers() == 0);
-            CHECK(Game(7).getNumPlayers() == 0);
-}
-
-TEST_CASE("Checking Player Construction") {
-            CHECK(Player().getNumOfCards() == 10);
-}
-
-TEST_CASE("Checking Game Construction: Players") {
-    Game game2(2);
-    Game game3(3);
-    Game game4(4);
-
-            CHECK(game2.getPlayers()[0].getNumOfCards() == 10);
-            CHECK(game2.getPlayers()[1].getNumOfCards() == 10);
-
-            CHECK(game3.getPlayers()[0].getNumOfCards() == 10);
-            CHECK(game3.getPlayers()[1].getNumOfCards() == 10);
-            CHECK(game3.getPlayers()[2].getNumOfCards() == 10);
-
-            CHECK(game4.getPlayers()[0].getNumOfCards() == 10);
-            CHECK(game4.getPlayers()[1].getNumOfCards() == 10);
-            CHECK(game4.getPlayers()[2].getNumOfCards() == 10);
-            CHECK(game4.getPlayers()[3].getNumOfCards() == 10);
-
+    CHECK(Game().getNumPlayers() == 2);
 }
 
 TEST_CASE("Checking Card Construction") {
@@ -58,33 +29,18 @@ TEST_CASE("Checking Card Construction") {
     Card sixthCard("Q", "spades");
     Card seventhCard("J", "spades");
 
-            CHECK(firstCard.getValue() == 3);
-            CHECK(secondCard.getValue() == 4);
-            CHECK(thirdCard.getValue() == 8);
-            CHECK(fourthCard.getValue() == 10);
-            CHECK(fifthCard.getValue() == 10);
-            CHECK(sixthCard.getValue() == 10);
-            CHECK(seventhCard.getValue() == 10);
+    CHECK(firstCard.getValue() == 3);
+    CHECK(secondCard.getValue() == 4);
+    CHECK(thirdCard.getValue() == 8);
+    CHECK(fourthCard.getValue() == 10);
+    CHECK(fifthCard.getValue() == 10);
+    CHECK(sixthCard.getValue() == 10);
+    CHECK(seventhCard.getValue() == 10);
 }
 
 TEST_CASE("Checking Deck Construction: size of decks") {
-            CHECK(Deck(false).getNumCards() == 52);
-            CHECK(Deck(true).getNumCards() == 10);
-}
-
-TEST_CASE("Checking Deck Construction: Player cards") {
-    Deck playerDeck(true);
-    int allBlank = true;
-    auto cardsInDeck = playerDeck.getCards();
-    for(const auto& card: playerDeck.getCards()) {
-        if(!card.getRank().empty())
-            allBlank = false;
-
-        if(!card.getSuit().empty())
-            allBlank = false;
-    }
-
-            CHECK(allBlank == true);
+    CHECK(Deck(false).getNumCards() == 52);
+    CHECK(Deck(true).getNumCards() == 0);
 }
 
 TEST_CASE("Checking Deck Construction: Default cards") {
@@ -100,9 +56,9 @@ TEST_CASE("Checking Deck Construction: Default cards") {
             suits.push_back(card.getSuit());
     }
 
-            CHECK(numCards == 52);
-            CHECK(ranks.size() == 13);
-            CHECK(suits.size() == 4);
+    CHECK(numCards == 52);
+    CHECK(ranks.size() == 13);
+    CHECK(suits.size() == 4);
 }
 
 TEST_CASE("Deck operations: remove") {
@@ -122,10 +78,10 @@ TEST_CASE("Deck operations: remove") {
     for(int i = 0; i < 17; i++)
         deck4.removeTopCard();
 
-            CHECK(deck.getCards().size() == 51);
-            CHECK(deck2.getCards().size() == 47);
-            CHECK(deck3.getCards().size() == 45);
-            CHECK(deck4.getCards().size() == 35);
+    CHECK(deck.getCards().size() == 51);
+    CHECK(deck2.getCards().size() == 47);
+    CHECK(deck3.getCards().size() == 45);
+    CHECK(deck4.getCards().size() == 35);
 }
 
 TEST_CASE("Deck operations: topCard") {
@@ -136,18 +92,18 @@ TEST_CASE("Deck operations: topCard") {
         tempDeck.removeTopCard();
     auto newTopCard = tempDeck.topCard();
 
-    auto deck2 = deck;
+    const auto& deck2 = deck;
     auto tempDeck2 = deck;
     for(int i = 0; i < 50; i++)
         tempDeck2.removeTopCard();
     auto topCard2 = tempDeck2.topCard();
 
-            CHECK(topCard == deck.getCards()[0]);
-            CHECK(newTopCard == tempDeck.getCards()[0]);
-            CHECK(newTopCard == deck.getCards()[5]);
+    CHECK(topCard == deck.getCards()[0]);
+    CHECK(newTopCard == tempDeck.getCards()[0]);
+    CHECK(newTopCard == deck.getCards()[5]);
 
-            CHECK(topCard2 == tempDeck2.getCards()[0]);
-            CHECK(topCard2 == deck2.getCards()[50]);
+    CHECK(topCard2 == tempDeck2.getCards()[0]);
+    CHECK(topCard2 == deck2.getCards()[50]);
 }
 
 
@@ -155,60 +111,118 @@ TEST_CASE("Checking Player operations: addCard") {
     Card newCard("3", "club");
     Player player;
     player.addCard(newCard);
-    auto playerDeck = player.getDeck();
-    auto placeInDeck = std::find_if(playerDeck.getCards().begin(), playerDeck.getCards().end(), [newCard](const Card& card) {
+    auto playerCards = player.getCards();
+    auto placeInDeck = std::find_if(playerCards.begin(), playerCards.end(), [newCard](const Card& card) {
         if (card == newCard)
             return true;
         return false;
     });
 
-            CHECK(placeInDeck != playerDeck.getCards().end());
+    CHECK(placeInDeck != playerCards.end());
 }
 
 TEST_CASE("Game operations: deal") {
-    Game game2(2);
-    Game game3(3);
-    Game game4(4);
+    Game game;
     Deck deck(false);
-    auto deckFor3 = deck;
-    auto deckFor4 = deck;
 
-    game2.deal(deck);
-    bool notBlank = true;
-    for(const auto& player: game2.getPlayers())
-        for(auto& card: player.getDeck().getCards())
+    game.deal(deck);
+    bool deck2NotBlank = true;
+    for(const auto& player: game.getPlayers())
+        for(auto& card: player.getCards())
             if(card.getRank().empty() && card.getSuit().empty())
-                notBlank = false;
+                deck2NotBlank = false;
 
-    game3.deal(deckFor3);
-    for(const auto& player: game3.getPlayers())
-        for(const auto& card: player.getDeck().getCards())
-            if(card.getRank().empty() && card.getSuit().empty())
-                notBlank = false;
-
-    game4.deal(deckFor4);
-    for(const auto& player: game4.getPlayers())
-        for(const auto& card: player.getDeck().getCards())
-            if(card.getRank().empty() && card.getSuit().empty())
-                notBlank = false;
-
-            CHECK(notBlank == true);
-            CHECK(deck.getNumCards() == 32);
-            CHECK(deckFor3.getNumCards() == 22);
-            CHECK(deckFor4.getNumCards() == 12);
+    CHECK(deck2NotBlank == true);
+    CHECK(deck.getNumCards() == 32);
 }
 
+TEST_CASE("Game operations: knocking") {
+    Game game;
+    Player player1 = game.getPlayers()[0];
+    Player player2 = game.getPlayers()[1];
+
+    // Generate Cards where a player can knock
+    std::vector<Card> knockableHand = { Card("4", "heart"), Card("5", "heart"), Card("6", "heart"), Card("7", "heart"),
+                                        Card("8", "heart"), Card("9", "heart"), Card("10", "heart"), Card("A", "diamond"),
+                                        Card("2", "spade"), Card("3", "club")};
+
+    // Generate Cards where a player can't knock
+    std::vector<Card> nonknockableHand = { Card("4", "heart"), Card("5", "heart"), Card("6", "heart"), Card("7", "heart"),
+                                        Card("8", "spade"), Card("9", "heart"), Card("10", "heart"), Card("A", "diamond"),
+                                        Card("2", "spade"), Card("3", "club")};
+
+    for(const auto& card: knockableHand) {
+        player1.addCard(card);
+    }
+    player1.filterMatched();
+
+    for(const auto& card: nonknockableHand) {
+        player2.addCard(card);
+    }
+    player2.filterMatched();
+
+    CHECK(player1.canKnock() == true);
+    CHECK(player2.canKnock() == false);
+}
+
+TEST_CASE("Game operations: going gin") {
+    Game game;
+    Player player1 = game.getPlayers()[0];
+    Player player2 = game.getPlayers()[1];
+
+    // Generate Cards where a player can go gin
+    std::vector<Card> ginHand = {Card("4", "heart"), Card("5", "heart"), Card("6", "heart"), Card("7", "heart"),
+                                 Card("8", "heart"), Card("9", "heart"), Card("10", "heart"), Card("A", "heart"),
+                                 Card("2", "heart"), Card("3", "heart")};
+
+    // Generate Cards where a player can't knock
+    std::vector<Card> nonGinHand = {Card("4", "heart"), Card("5", "heart"), Card("6", "heart"), Card("7", "heart"),
+                                    Card("8", "spade"), Card("9", "heart"), Card("10", "heart"), Card("A", "diamond"),
+                                    Card("2", "spade"), Card("3", "club")};
+
+    for(const auto& card: ginHand) {
+        player1.addCard(card);
+    }
+    player1.filterMatched();
+
+    for(const auto& card: nonGinHand) {
+        player2.addCard(card);
+    }
+    player2.filterMatched();
+
+    CHECK(player1.gin() == true);
+    CHECK(player2.gin() == false);
+}
 
 int main(int argc, char** argv) {
     ///////////////////////////////////////////// Run the tests /////////////////////////////////////////////
     doctest::Context ctx;
-    ctx.setOption("abort-after", 5);  // default - stop after 5 failed asserts
+    ctx.setOption("abort-after", 1);  // default - stop after 5 failed asserts
     ctx.applyCommandLine(argc, argv); // apply command line - argc / argv
     ctx.setOption("no-breaks", true); // override - don't break in the debugger
     int res = ctx.run();              // run test cases unless with --no-run
     if(ctx.shouldExit())              // query flags (and --exit) rely on this
         return res;                   // propagate the result of the tests
     /////////////////////////////////////////// Done Run the tests //////////////////////////////////////////
+
+    //////////////////////////////////////////// Playing the Game ///////////////////////////////////////////
+    //Initilize the game
+    Game game;
+
+    //Which players are being played by user and by ai
+    std::vector<bool> whosPlaying; // are the players going to be played by user
+    bool userResponse;
+    for(auto index = game.getPlayers().begin(); index != game.getPlayers().end(); index++) {
+        std::cout << "Is player " << (index - game.getPlayers().begin())+1 << " going to be played by a user or ai";
+        std::cout << " (0 = no | 1 = yes)" << std::endl;
+        std::cin >> userResponse;
+        whosPlaying.push_back(userResponse);
+    }
+
+    //Start the game
+    game.gamePlay(whosPlaying);
+    ///////////////////////////////////////// Done Playing the Game /////////////////////////////////////////
+
 
     return res; // + your_program_res
 }

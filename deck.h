@@ -9,21 +9,22 @@
 #include <algorithm>
 #include <random>
 #include <chrono>
+#include "cardProperties.h"
 class Deck{
 public:
-    explicit Deck(bool forPlayer = false);
+    Deck() = default;
+    explicit Deck(bool forPlayer);
+    const std::vector<Card>& getCards() const;
     std::vector<Card>& getCards();
-    int getNumCards();
-    Card topCard();
+    int getNumCards() const;
+    Card topCard() const;
     void removeTopCard();
+    void removeCard(const Card&);
+    void addCard(const Card&);
+    bool isEmpty();
 private:
     std::vector<Card> cards;
 };
 
 std::vector<Card> createDeck(bool forPlayer);
-int typeOfDeck(bool); // type of deck means to whom does it belong
-//  if it is a player's deck then it's going to
-//  be restricted to 10 cards, else its 52 or
-//  the number of cards left over from the players'
-//  hands
 #endif //GINRUMMYBOT_DECK_H

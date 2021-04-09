@@ -5,21 +5,29 @@
 #include "deck.h"
 Deck::Deck(bool forPlayer): cards(createDeck(forPlayer)) {}
 
+const std::vector<Card>& Deck::getCards() const{
+    return cards;
+}
+
 std::vector<Card>& Deck::getCards(){
     return cards;
 }
 
+void Deck::addCard(const Card& newCard) {
+    if(cards.size() < 52) {
+        cards.push_back(newCard);
+    }
+}
+
 std::vector<Card> createDeck(bool forPlayer) {
     if(forPlayer) {
-        return std::vector<Card>(10, Card("",""));
+        return std::vector<Card>();
     } else {
         auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 
         std::vector<Card> fullDeck;
-        const std::vector<std::string> cardRanks = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
-        const std::vector<std::string> cardSuits {"club", "diamond", "heart", "spade"};
-        for (const auto& rank: cardRanks)
-            for (const auto& suit: cardSuits)
+        for (const auto& rank: CardProperties::getCardRanks())
+            for (const auto& suit: CardProperties::getCardSuits())
                 fullDeck.emplace_back(Card(rank, suit));
 
         std::shuffle(fullDeck.begin(), fullDeck.end(), std::default_random_engine(seed));
@@ -27,7 +35,7 @@ std::vector<Card> createDeck(bool forPlayer) {
     }
 }
 
-Card Deck::topCard() {
+Card Deck::topCard() const {
     return cards[0];
 }
 
@@ -36,8 +44,15 @@ void Deck::removeTopCard() {
         cards.erase(cards.begin());
 }
 
-int Deck::getNumCards(){
+void Deck::removeCard(const Card& card){
+    auto cardFound = std::find(cards.begin(), cards.end(), card);
+    cards.erase(cardFound);
+}
+
+int Deck::getNumCards() const{
     return cards.size();
 }
 
-
+bool Deck::isEmpty() {
+    return cards.empty();
+}
