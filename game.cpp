@@ -91,24 +91,21 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     Deck discard; // the discard pile
     while(!roundOver) {
         std::pair<int, int> topCard;
-        if (!discard.isEmpty()) {
-            // Choose whether to take top stock card or top discard card
-            initializeRandomNumberGenerator(1);
-            int selectDiscard = generateRandomNumber();
-            if (selectDiscard) {
-                topCard = discard.topCard();
-                discard.removeTopCard();
-                players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
-                markGameBoard(turn, topCard, CardProperties::CardStates::P1EXDISCARD, CardProperties::CardStates::P0EXDISCARD);
+        topCard = stock.topCard();
+        stock.removeTopCard();
+        discard.addCard(std::get<0>(topCard), std::get<1>(topCard));
+        markGameBoard(turn, topCard, CardProperties::CardStates::P1TOPDISCARD, CardProperties::CardStates::P0TOPDISCARD);
 
-            } else {
-                topCard = stock.topCard();
-                stock.removeTopCard();
-                players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
-                markGameBoard(turn, topCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
+        // Choose whether to take top stock card or top discard card
+        initializeRandomNumberGenerator(1);
+        int selectDiscard = generateRandomNumber();
+        if (selectDiscard) {
+            topCard = discard.topCard();
+            discard.removeTopCard();
+            players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
+            markGameBoard(turn, topCard, CardProperties::CardStates::P1EXDISCARD, CardProperties::CardStates::P0EXDISCARD);
 
-            }
-        } else { // If discard is empty then take from stock
+        } else {
             topCard = stock.topCard();
             stock.removeTopCard();
             players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
