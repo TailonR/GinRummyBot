@@ -3,7 +3,10 @@
 //
 
 #include "game.h"
-Game::Game(): players({2, Player()}), mt(std::random_device{}()) {}
+Game::Game(): players({2, Player()}), mt(std::random_device{}()),
+              gameBoard(std::vector<std::vector<int>>(4, std::vector<int>(14, CardProperties::CardStates::STOCK)))
+                        {}
+
 
 int Game::getNumPlayers() {
     return players.size();
@@ -20,13 +23,22 @@ std::vector<int> Game::chooseTheOrder() {
     return {(dealerIndex? 0: 1), (dealerIndex? 1: 0)};
 }
 
+void Game::markGameBoard(int playerTurn, const std::pair<int, int>& card, int possibleNewState1, int possibleNewState2) {
+    if (playerTurn) {
+        gameBoard[std::get<0>(card)][std::get<1>(card)] = possibleNewState1;
+    } else {
+        gameBoard[std::get<0>(card)][std::get<1>(card)] = possibleNewState2;
+    }
+}
+
 void Game::deal(Deck& theDeck) {
     playerOrder = chooseTheOrder();
     for(int numCardsInHand = 0; numCardsInHand < 10; numCardsInHand++) {
         for(const auto& playerIndex: playerOrder) {
             auto newCard = theDeck.topCard();
-            players[playerIndex].addCard(newCard);
+            players[playerIndex].addCard(std::get<0>(newCard), std::get<1>(newCard));
             theDeck.removeTopCard();
+            markGameBoard(playerIndex, newCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
         }
     }
 }
@@ -40,64 +52,92 @@ int Game::roundIsWon() {
 }
 
 bool Game::gameIsWon() {
-    for(const auto& player: players) {
-        return (player.getScore() > 100);
-    }
-    return false;
+    return (players[0].getScore() > 100 || players[1].getScore() > 100);
 }
+
+void Game::printPlayerCards(std::ostream& os, int turn) {
+    for (int suitIndex = 0; suitIndex < players[turn].getCards().size(); suitIndex++) {
+        for(int rankIndex = 0; rankIndex < players[turn].getCards()[0].size(); rankIndex++) {
+            if(players[turn].getCards()[suitIndex][rankIndex] == 1) {
+                os << "[" << suitIndex << ", " << rankIndex << ", " << standardCards.cards[suitIndex][rankIndex] << "] ";
+            }
+        }
+    }
+    os << std::endl;
+    os << std::endl;
+}
+
+void Game::collectPlayerCards(int turn, std::vector<std::pair<int, int>>& tempPlayerCards) {
+    for(int suitIndex = 0; suitIndex != players[turn].getCards().size(); suitIndex++) {
+        for(int rankIndex = 0; rankIndex != players[turn].getCards()[0].size(); rankIndex++) {
+            if(players[turn].getCards()[suitIndex][rankIndex] == 1) {
+                tempPlayerCards.emplace_back(suitIndex, rankIndex);
+            }
+        }
+    }
+}
+
 
 std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     players[0].clearCards();
     players[1].clearCards();
     // Create the deck and deal out the cards
-    Deck theDeck(false);
-    deal(theDeck);
+    Deck stock(true);
+    deal(stock);
 
     bool roundOver = false;
     int knocked = 0;
     int turn = playerOrder[0];
     Deck discard; // the discard pile
     while(!roundOver) {
-        //////////// Going to be part of MCTS ////////////
-        // Turn over top card
-        auto topCard = theDeck.topCard();
-        discard.addCard(topCard);
-        theDeck.removeTopCard();
+        std::pair<int, int> topCard;
+        if (!discard.isEmpty()) {
+            // Choose whether to take top stock card or top discard card
+            initializeRandomNumberGenerator(1);
+            int selectDiscard = generateRandomNumber();
+            if (selectDiscard) {
+                topCard = discard.topCard();
+                discard.removeTopCard();
+                players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
+                markGameBoard(turn, topCard, CardProperties::CardStates::P1EXDISCARD, CardProperties::CardStates::P0EXDISCARD);
 
-        std::cout << "Current top Card" << std::endl;
-        std::cout << "[" << topCard.getRank() << ", " << topCard.getSuit() << ", " << topCard.getValue() << "] ";
-        std::cout << std::endl;
-        std::cout << std::endl;
+            } else {
+                topCard = stock.topCard();
+                stock.removeTopCard();
+                players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
+                markGameBoard(turn, topCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
 
-        // Display the opponents cards only if the user is not playing
-        if(whosPlaying[turn] == 0 && whosPlaying[(turn? 0: 1)] != 1){
-            std::cout << "Here are player " << turn << "'s cards:" << std::endl;
-            for (const auto &card: players[turn].getCards()) {
-                std::cout << "[" << card.getRank() << ", " << card.getSuit() << ", " << card.getValue() << "] ";
             }
-            std::cout << std::endl;
-            std::cout << std::endl;
+        } else { // If discard is empty then take from stock
+            topCard = stock.topCard();
+            stock.removeTopCard();
+            players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
+            markGameBoard(turn, topCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
+
         }
 
-        int takeTopCard;
-        int discardIndex;
-        if (whosPlaying[turn])  {
-            // Display the player's cards
-            std::cout << "Here your cards:" << std::endl;
-            for(const auto& card: players[turn].getCards()) {
-                std::cout << "[" << card.getRank() << ", " << card.getSuit() << ", " << card.getValue() << "] ";
-            }
-            std::cout << std::endl;
-            std::cout << std::endl;
-            std::cout << "Do you want to take the top card? (0 = No, 1 = Yes)" << std::endl;
-            std::cin >> takeTopCard;
+        // Display the opponents cards only if the no user is playing
+        if(whosPlaying[turn] == 0 && whosPlaying[(turn? 0: 1)] != 1){
+            std::cout << "Here are player " << turn << "'s cards (with the top card listed last):" << std::endl;
+            printPlayerCards(std::cout, turn);
+        }
 
-            if(takeTopCard) {
-                std::cout << "Which card do you want to discard? (enter 0-9)" << std::endl;
-                std::cin >> discardIndex;
-                auto discardCard = players[turn].getCards()[discardIndex];
-                players[turn].makeMove(topCard, discardCard);
-            }
+        int discardIndex;
+        // If it's the user's turn
+        if (whosPlaying[turn])  {
+            std::vector<std::pair<int, int>> tempPlayerCards;
+            // Display the player's cards
+            std::cout << "Here your cards (with the top card listed last):" << std::endl;
+            printPlayerCards(std::cout, turn);
+            std::cout << std::endl;
+
+            // Flatten the user's cards 2D vector into a 1D vector
+            collectPlayerCards(turn, tempPlayerCards);
+
+            std::cout << "What card you want to discard? (enter 0-10, 10 being the top card)" << std::endl;
+            std::cin >> discardIndex;
+            auto discardCard = tempPlayerCards[discardIndex];
+            players[turn].makeMove(gameBoard, turn, discardCard, discard);
 
             if (players[turn].canKnock()) {
                 std::cout << "Do you want to knock? (0 = No, 1 = Yes)" << std::endl;
@@ -106,17 +146,19 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             std::cout << std::endl;
             std::cout << std::endl;
             std::cout << std::endl;
-        } else {
-            // Randomly choose to take the top card
-            initializeRandomNumberGenerator(1);
-            takeTopCard = generateRandomNumber();
-            if(takeTopCard) {
-                // Randomly choose what card to discard
-                initializeRandomNumberGenerator(9);
-                discardIndex = generateRandomNumber();
-                auto discardCard = players[turn].getCards()[discardIndex];
-                players[turn].makeMove(topCard, discardCard);
-            }
+        } else { // If it's the bot's turn
+            std::vector<std::pair<int, int>> tempPlayerCards;
+
+            // Flatten the bot's cards 2D vector into a 1D vector
+            collectPlayerCards(turn, tempPlayerCards);
+
+            // Randomly choose what card to discard
+            initializeRandomNumberGenerator(10);
+            discardIndex = generateRandomNumber();
+            auto discardCard = tempPlayerCards[discardIndex];
+            players[turn].makeMove(gameBoard, turn, discardCard, discard);
+            markGameBoard(turn, topCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
+
             // If player can knock, randomly choose to knock
             if (players[turn].canKnock()) {
                 initializeRandomNumberGenerator(1);
@@ -128,7 +170,7 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
 
         if (roundIsWon() == 1 || knocked) {
             roundOver = true;
-        } else if (theDeck.isEmpty()) {
+        } else if (stock.isEmpty()) {
             roundOver = true;
             turn = -1;
         }
@@ -139,7 +181,10 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
 
 void Game::gamePlay(const std::vector<bool>& whosPlaying) {
     bool gameOver = false;
+    int roundCount = 0;
     while(!gameOver) {
+        roundCount++;
+        std::cout << "Start of Round #" << roundCount << std::endl;
         auto outcome = playRound(whosPlaying);
         if(std::get<0>(outcome) != -1) {
             int opponentIndex = std::get<0>(outcome)? 0: 1;
@@ -149,12 +194,12 @@ void Game::gamePlay(const std::vector<bool>& whosPlaying) {
             if (std::get<1>(outcome) == 0) {
                 players[winnerIndex].setScore(opponentTotalUnmatchedValue + 20);
             } else {
-
                 int winnerTotalUnmatchedValue = players[winnerIndex].getValueOfUnmatched();
                 if (opponentTotalUnmatchedValue < winnerTotalUnmatchedValue) {
                     players[winnerIndex].setScore(winnerTotalUnmatchedValue - opponentTotalUnmatchedValue);
+
                 } else {
-                    // Add logic to get rid of card if the opponent can (the undercut)
+                    // Add logic to get rid of currentDiscardCard if the opponent can (the undercut)
                     players[opponentIndex].setScore(opponentTotalUnmatchedValue - winnerTotalUnmatchedValue + 10);
                 }
             }
@@ -162,9 +207,17 @@ void Game::gamePlay(const std::vector<bool>& whosPlaying) {
 
         // Who is the user playing
         auto user = std::find_if(whosPlaying.begin(), whosPlaying.end(), [](const auto& userPlayer) { return (userPlayer); });
-        auto userIndex = user - whosPlaying.begin();
-        std::cout << "Your score is: " << players[userIndex].getScore() << std::endl;
-        std::cout << "Your opponent's score is: " << players[(userIndex? 0: 1)].getScore() << std::endl;
+        if(user != whosPlaying.end()) {
+            auto userIndex = user - whosPlaying.begin();
+            std::cout << "Your score is: " << players[userIndex].getScore() << std::endl;
+            std::cout << "Your opponent's score is: " << players[(userIndex? 0: 1)].getScore() << std::endl;
+        } else {
+            std::cout << "Player 0's score is: " << players[0].getScore() << std::endl;
+            std::cout << "Player 1's score is: " << players[1].getScore() << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
 
         if (gameIsWon()) {
             gameOver = true;

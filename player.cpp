@@ -3,11 +3,10 @@
 //
 
 #include "player.h"
-#include <iostream>
-Player::Player(): deck(Deck(true)), score(0) {}
+Player::Player(): cards(std::vector<std::vector<int>>(4, std::vector<int>(14, 0))) {}
 
-const std::vector<Card>& Player::getCards() const {
-    return deck.getCards();
+const std::vector<std::vector<int>>& Player::getCards() const {
+    return cards;
 }
 
 int Player::getScore() const {
@@ -18,9 +17,16 @@ void Player::setScore(int newScore) {
     score += newScore;
 }
 
-void Player::addCard(const Card& newCard) {
-    deck.addCard(newCard);
-    unmatched.push_back(newCard);
+void Player::addCard(int suit, int rank) {
+    cards[suit][rank] = 1;
+    unmatched.emplace_back(suit, rank);
+}
+
+int Player::getValueOfCard(const std::pair<int, int> & card) const {
+    CardProperties standardCards;
+    int suit = std::get<0>(card);
+    int rank = std::get<1>(card);
+    return standardCards.cards[suit][rank];
 }
 
 void Player::filterMatched() {
@@ -31,7 +37,6 @@ void Player::filterMatched() {
             for(const auto& cardInRun: run) {
                 auto found = std::find(unmatched.begin(), unmatched.end(), cardInRun);
                 cardIter = unmatched.erase(found);
-                matched.push_back(cardInRun);
             }
         }
         auto set = findSet(*cardIter);
@@ -39,7 +44,6 @@ void Player::filterMatched() {
             for(const auto& cardInSet: set) {
                 auto found = std::find(unmatched.begin(), unmatched.end(), cardInSet);
                 cardIter = unmatched.erase(found);
-                matched.push_back(cardInSet);
             }
         }
 
@@ -48,46 +52,42 @@ void Player::filterMatched() {
     }
 }
 
-void Player::makeMove(const Card& cardToInsert, const Card& cardToDiscard) {
-    // Discard that card from your deck
+
+void Player::makeMove(std::vector<std::vector<int>>& gameBoard, int playerTurn, const std::pair<int,int> & cardToDiscard, Deck & discardPile) {
+    // Update Game Board
+    if(playerTurn) {
+        gameBoard[std::get<0>(cardToDiscard)][std::get<1>(cardToDiscard)] = CardProperties::CardStates::P1DISCARD;
+    } else {
+        gameBoard[std::get<0>(cardToDiscard)][std::get<1>(cardToDiscard)] = CardProperties::CardStates::P0DISCARD;
+
+    }
+
+    // Discard the given discard card from your deck
     discardCard(cardToDiscard);
 
-    // Now add the card to your deck
-    addCard(cardToInsert);
+    // Add that card to the discard pile
+    discardPile.addCard(std::get<0>(cardToDiscard), std::get<1>(cardToDiscard));
 
-    // Now filter the deck into matched and unmatched cards
+    // Now filter out the matched cards
     filterMatched();
 }
 
-bool isConsecutiveFaceCard(const Card& firstCard, const Card& secondCard) {
-    if (firstCard.getRank() == "A") {
-        return (secondCard.getRank() == "2");
-    } else if (firstCard.getRank() == "J") {
-        return (secondCard.getRank() == "10" || secondCard.getRank() == "Q");
-    } else if (firstCard.getRank() == "Q") {
-        return (secondCard.getRank() == "J" || secondCard.getRank() == "K");
+bool isConsecutive(const std::pair<int, int>& firstCard, const std::pair<int, int>& secondCard) {
+    int rankOfFirst = std::get<1>(firstCard);
+    int rankOfSecond = std::get<1>(secondCard);
+    if(rankOfFirst == 0) {
+        return (rankOfSecond == 2);
     } else {
-        return (secondCard.getRank() == "Q");
+        return (std::abs(rankOfFirst - rankOfSecond) < 2);
     }
 }
 
-bool isConsecutive(const Card& firstCard, const Card& secondCard) {
-    if(!isAFaceCard(firstCard.getRank()) && !isAFaceCard(secondCard.getRank())) {
-        // count consecutive as the same card and the next card
-        return (std::abs(std::stoi(firstCard.getRank()) - std::stoi(secondCard.getRank())) < 2);
-    } else if(isAFaceCard(firstCard.getRank())) {
-        return isConsecutiveFaceCard(firstCard, secondCard);
-    } else {
-        return isConsecutiveFaceCard(secondCard, firstCard);
-    }
-}
-
-// This could eventually be part of the evaluation function
-std::vector<Card> Player::findRun(const Card& cardToBeMatched) const {
-    std::vector<Card> tempVec;
+/// This could eventually be part of the evaluation function
+std::vector<std::pair<int, int>> Player::findRun(const std::pair<int, int>& cardToBeMatched) const {
+    std::vector<std::pair<int, int>> tempVec;
     auto tempCardToBeMatched = cardToBeMatched;
     for(const auto& card: unmatched) {
-        if(card.getSuit() == tempCardToBeMatched.getSuit()) {
+        if(std::get<0>(card) == std::get<0>(tempCardToBeMatched)) {
             if(isConsecutive(card, tempCardToBeMatched)) {
                 tempVec.push_back(card);
                 tempCardToBeMatched = card;
@@ -98,11 +98,11 @@ std::vector<Card> Player::findRun(const Card& cardToBeMatched) const {
 }
 
 // This could eventually be part of the evaluation function
-std::vector<Card> Player::findSet(const Card& cardToBeMatched) const {
-    std::vector<Card> tempVec;
+std::vector<std::pair<int, int>> Player::findSet(const std::pair<int, int>& cardToBeMatched) const {
+    std::vector<std::pair<int, int>> tempVec;
     auto tempCardToBeMatched = cardToBeMatched;
     for(const auto& card: unmatched) {
-        if(card.getRank() == tempCardToBeMatched.getRank()) {
+        if(std::get<1>(card) == std::get<1>(tempCardToBeMatched)) {
             tempVec.push_back(card);
             tempCardToBeMatched = card;
         }
@@ -111,18 +111,31 @@ std::vector<Card> Player::findSet(const Card& cardToBeMatched) const {
 }
 
 void Player::clearCards() {
-    deck.getCards().clear();
-    matched.clear();
+    for(auto & card : cards)
+        for (int rank = 0; rank < cards[0].size(); rank++)
+            card[rank] = 0; // This is going to set all cards to 0 (even if they were already 0)
+
     unmatched.clear();
 }
 
-void Player::discardCard(const Card & card) {
-    deck.removeCard(card);
-    auto cardFoundInMatched = std::find(matched.begin(), matched.end(), card);
-    auto cardFoundInUnmatched = std::find(unmatched.begin(), unmatched.end(), card);
+int Player::getNumCards() {
+    int numCards = 0;
+    for(const auto& suit: cards)
+        for(const auto& rank: suit)
+            if (rank == 1)
+                numCards++;
 
-    if(cardFoundInMatched != matched.end())
-        matched.erase(cardFoundInMatched);
+    return numCards;
+}
+
+void Player::discardCard(const std::pair<int,int>& card) {
+    int suit = std::get<0>(card);
+    int rank = std::get<1>(card);
+    cards[suit][rank] = 0;
+
+    auto cardFoundInUnmatched = std::find_if(unmatched.begin(), unmatched.end(), [suit, rank](auto card) {
+        return (std::get<0>(card) == suit && std::get<1>(card) == rank);
+    });
 
     if(cardFoundInUnmatched != unmatched.end()) {
         unmatched.erase(cardFoundInUnmatched);
@@ -132,7 +145,8 @@ void Player::discardCard(const Card & card) {
 int Player::getValueOfUnmatched() const {
     int totalValueOfUnmatched = 0;
     for(const auto& card: unmatched) {
-        totalValueOfUnmatched += card.getValue();
+        int valueOfCard = getValueOfCard(card);
+        totalValueOfUnmatched += valueOfCard;
     }
 
     return totalValueOfUnmatched;
@@ -143,5 +157,10 @@ bool Player::canKnock() const {
 }
 
 bool Player::gin() const {
-    return (matched.size() == 10);
+    std::cout << std::endl;
+    return (unmatched.empty());
+}
+
+bool operator==(const Player& lhs, const Player& rhs) {
+    return (lhs.getCards() == rhs.getCards());
 }

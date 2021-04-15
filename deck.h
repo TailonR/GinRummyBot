@@ -4,27 +4,25 @@
 
 #ifndef GINRUMMYBOT_DECK_H
 #define GINRUMMYBOT_DECK_H
-#include "card.h"
 #include <vector>
 #include <algorithm>
 #include <random>
 #include <chrono>
+#include <map>
+#include <utility>
 #include "cardProperties.h"
 class Deck{
 public:
-    Deck() = default;
-    explicit Deck(bool forPlayer);
-    const std::vector<Card>& getCards() const;
-    std::vector<Card>& getCards();
+    explicit Deck(bool = false);
     int getNumCards() const;
-    Card topCard() const;
+    std::pair<int,int> topCard() const;
     void removeTopCard();
-    void removeCard(const Card&);
-    void addCard(const Card&);
+    void addCard(int, int);
     bool isEmpty();
+
 private:
-    std::vector<Card> cards;
+    std::vector<std::pair<int, int>> cards;
 };
 
-std::vector<Card> createDeck(bool forPlayer);
+std::vector<std::pair<int, int>> createCardList(bool stock);
 #endif //GINRUMMYBOT_DECK_H

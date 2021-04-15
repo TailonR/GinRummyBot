@@ -19,15 +19,19 @@ public:
     const std::vector<Player>& getPlayers();
     int roundIsWon();
     bool gameIsWon();
+    void markGameBoard(int playerTurn, const std::pair<int, int>& card, int possibleNewState1, int possibleNewState2);
 private:
+    void printPlayerCards(std::ostream&, int turn);
     void initializeRandomNumberGenerator(int);
     int generateRandomNumber();
+    void collectPlayerCards(int, std::vector<std::pair<int, int>>&);
+    CardProperties standardCards;
+    std::vector<std::vector<int>> gameBoard;
     std::mt19937 mt;
     std::uniform_int_distribution<int> randomNumberGenerator;
     std::vector<int> chooseTheOrder();
     std::vector<Player> players;
     std::vector<int> playerOrder;
-
 };
 
 #endif //GINRUMMYBOT_GAME_H
