@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
                  "      12 - K\n"
                  "      everything else: the rank is the number (e.g 2 - 2, 3 - 3)" << std::endl;
     std::cout << "Cards are displayed in the following order" << std::endl;
-    std::cout << "[Rank, Suit, Value]" << std::endl;
+    std::cout << "[Suit, Rank, Value]" << std::endl;
     std::cout << std::endl;
     std::cout << "Press enter to continue" << std::endl;
     std::cin.ignore();
