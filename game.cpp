@@ -41,6 +41,8 @@ void Game::deal(Deck& theDeck) {
             markGameBoard(playerIndex, newCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
         }
     }
+    auto topCard = theDeck.topCard();
+    markGameBoard(0, topCard, CardProperties::CardStates::TOPSTOCK, CardProperties::CardStates::TOPSTOCK);
 }
 
 int Game::roundIsWon() {
@@ -93,7 +95,7 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     topCard = stock.topCard();
     stock.removeTopCard();
     discard.addCard(std::get<0>(topCard), std::get<1>(topCard));
-    markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
+    markGameBoard(turn, topCard, CardProperties::CardStates::TOPDISCARD, CardProperties::CardStates::TOPDISCARD);
     while(!roundOver) {
         // Choose whether to take top stock card or top discard card
         initializeRandomNumberGenerator(1);
@@ -133,7 +135,7 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             std::cout << "What card you want to discard? (enter 0-9)" << std::endl;
             std::cin >> discardIndex;
             auto discardCard = tempPlayerCards[discardIndex];
-            players[turn].makeMove(gameBoard, turn, discardCard, discard);
+            players[turn].makeMove(gameBoard, discardCard, discard);
 
             if (players[turn].canKnock()) {
                 std::cout << "Do you want to knock? (0 = No, 1 = Yes)" << std::endl;
@@ -152,7 +154,7 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             initializeRandomNumberGenerator(9);
             discardIndex = generateRandomNumber();
             auto discardCard = tempPlayerCards[discardIndex];
-            players[turn].makeMove(gameBoard, turn, discardCard, discard);
+            players[turn].makeMove(gameBoard, discardCard, discard);
             markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
 
             // If player can knock, randomly choose to knock

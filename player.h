@@ -11,7 +11,7 @@ public:
     Player();
     const std::vector<std::vector<int>>& getCards() const;
     void addCard(int, int);
-    void makeMove(std::vector<std::vector<int>>&, int, const std::pair<int,int> &, Deck & discardPile);
+    void makeMove(std::vector<std::vector<int>>&, const std::pair<int,int> &, Deck & discardPile);
     bool gin() const;
     int getScore() const;
     void setScore(int);

@@ -53,9 +53,9 @@ void Player::filterMatched() {
 }
 
 
-void Player::makeMove(std::vector<std::vector<int>>& gameBoard, int playerTurn, const std::pair<int,int> & cardToDiscard, Deck & discardPile) {
+void Player::makeMove(std::vector<std::vector<int>>& gameBoard, const std::pair<int,int> & cardToDiscard, Deck & discardPile) {
     // Update Game Board
-    gameBoard[std::get<0>(cardToDiscard)][std::get<1>(cardToDiscard)] = CardProperties::CardStates::DISCARD;
+    gameBoard[std::get<0>(cardToDiscard)][std::get<1>(cardToDiscard)] = CardProperties::CardStates::TOPDISCARD;
 
 
     // Discard the given discard card from your deck
