@@ -89,13 +89,12 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     int knocked = 0;
     int turn = playerOrder[0];
     Deck discard; // the discard pile
+    std::pair<int, int> topCard;
+    topCard = stock.topCard();
+    stock.removeTopCard();
+    discard.addCard(std::get<0>(topCard), std::get<1>(topCard));
+    markGameBoard(turn, topCard, CardProperties::CardStates::P1TOPDISCARD, CardProperties::CardStates::P0TOPDISCARD);
     while(!roundOver) {
-        std::pair<int, int> topCard;
-        topCard = stock.topCard();
-        stock.removeTopCard();
-        discard.addCard(std::get<0>(topCard), std::get<1>(topCard));
-        markGameBoard(turn, topCard, CardProperties::CardStates::P1TOPDISCARD, CardProperties::CardStates::P0TOPDISCARD);
-
         // Choose whether to take top stock card or top discard card
         initializeRandomNumberGenerator(1);
         int selectDiscard = generateRandomNumber();
