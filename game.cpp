@@ -214,8 +214,11 @@ void Game::gamePlay(const std::vector<bool>& whosPlaying) {
         } else {
             int player0sUnmatchedValue = players[0].getValueOfUnmatched();
             int player1sUnmatchedValue = players[1].getValueOfUnmatched();
-            players[0].setScore(player0sUnmatchedValue);
-            players[1].setScore(player1sUnmatchedValue);
+            if (player0sUnmatchedValue < player1sUnmatchedValue) {
+                players[0].setScore(player1sUnmatchedValue - player0sUnmatchedValue);
+            } else if (player1sUnmatchedValue < player0sUnmatchedValue) {
+                players[1].setScore(player0sUnmatchedValue - player0sUnmatchedValue);
+            }
         }
 
         // Who is the user playing

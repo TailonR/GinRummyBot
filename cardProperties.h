@@ -37,7 +37,6 @@ struct CardProperties {
 
     enum CardStates {STOCK = 0, TOPSTOCK = 1, DISCARD = 2, TOPDISCARD = 3, P0CARD = 4, P1CARD = 5};
 
-
     std::vector<std::vector<int>> cards;
 };
 #endif //GINRUMMYBOT_CARDPROPERTIES_H
