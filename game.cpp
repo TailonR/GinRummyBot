@@ -38,7 +38,7 @@ void Game::deal(Deck& theDeck) {
             auto newCard = theDeck.topCard();
             players[playerIndex].addCard(std::get<0>(newCard), std::get<1>(newCard));
             theDeck.removeTopCard();
-            markGameBoard(playerIndex, newCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
+            markGameBoard(playerIndex, newCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
         }
     }
 }
@@ -93,7 +93,7 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     topCard = stock.topCard();
     stock.removeTopCard();
     discard.addCard(std::get<0>(topCard), std::get<1>(topCard));
-    markGameBoard(turn, topCard, CardProperties::CardStates::P1TOPDISCARD, CardProperties::CardStates::P0TOPDISCARD);
+    markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
     while(!roundOver) {
         // Choose whether to take top stock card or top discard card
         initializeRandomNumberGenerator(1);
@@ -102,19 +102,19 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             topCard = discard.topCard();
             discard.removeTopCard();
             players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
-            markGameBoard(turn, topCard, CardProperties::CardStates::P1EXDISCARD, CardProperties::CardStates::P0EXDISCARD);
+            markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
 
         } else {
             topCard = stock.topCard();
             stock.removeTopCard();
             players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
-            markGameBoard(turn, topCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
+            markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
 
         }
 
         // Display the opponents cards only if the no user is playing
         if(whosPlaying[turn] == 0 && whosPlaying[(turn? 0: 1)] != 1){
-            std::cout << "Here are player " << turn << "'s cards (with the top card listed last):" << std::endl;
+            std::cout << "Here are player " << turn << "'s cards (with the new card listed last):" << std::endl;
             printPlayerCards(std::cout, turn);
         }
 
@@ -123,14 +123,14 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
         if (whosPlaying[turn])  {
             std::vector<std::pair<int, int>> tempPlayerCards;
             // Display the player's cards
-            std::cout << "Here your cards (with the top card listed last):" << std::endl;
+            std::cout << "Here your cards (with the new card listed last):" << std::endl;
             printPlayerCards(std::cout, turn);
             std::cout << std::endl;
 
             // Flatten the user's cards 2D vector into a 1D vector
             collectPlayerCards(turn, tempPlayerCards);
 
-            std::cout << "What card you want to discard? (enter 0-10, 10 being the top card)" << std::endl;
+            std::cout << "What card you want to discard? (enter 0-9)" << std::endl;
             std::cin >> discardIndex;
             auto discardCard = tempPlayerCards[discardIndex];
             players[turn].makeMove(gameBoard, turn, discardCard, discard);
@@ -149,11 +149,11 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             collectPlayerCards(turn, tempPlayerCards);
 
             // Randomly choose what card to discard
-            initializeRandomNumberGenerator(10);
+            initializeRandomNumberGenerator(9);
             discardIndex = generateRandomNumber();
             auto discardCard = tempPlayerCards[discardIndex];
             players[turn].makeMove(gameBoard, turn, discardCard, discard);
-            markGameBoard(turn, topCard, CardProperties::CardStates::P1EXSTOCK, CardProperties::CardStates::P0EXSTOCK);
+            markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
 
             // If player can knock, randomly choose to knock
             if (players[turn].canKnock()) {

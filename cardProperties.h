@@ -35,8 +35,7 @@ struct CardProperties {
         }
     }
 
-    enum CardStates {STOCK = 0, P0EXSTOCK = 1, P0EXDISCARD = 2, P1EXSTOCK = 3, P1EXDISCARD = 4, P0TOPDISCARD = 5,
-            P0DISCARD = 6, P1TOPDISCARD = 7, P1DISCARD = 8};
+    enum CardStates {STOCK = 0, TOPSTOCK = 1, DISCARD = 2, TOPDISCARD = 3, P0CARD = 4, P1CARD = 5};
 
 
     std::vector<std::vector<int>> cards;
