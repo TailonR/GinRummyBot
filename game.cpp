@@ -79,10 +79,18 @@ void Game::collectPlayerCards(int turn, std::vector<std::pair<int, int>>& tempPl
     }
 }
 
+void Game::clearBoard() {
+    for (auto& suit: gameBoard) {
+        for(auto& state: suit) {
+            state = 0;
+        }
+    }
+}
 
 std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     players[0].clearCards();
     players[1].clearCards();
+    clearBoard();
     // Create the deck and deal out the cards
     Deck stock(true);
     deal(stock);
@@ -96,6 +104,8 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
     stock.removeTopCard();
     discard.addCard(std::get<0>(topCard), std::get<1>(topCard));
     markGameBoard(turn, topCard, CardProperties::CardStates::TOPDISCARD, CardProperties::CardStates::TOPDISCARD);
+    topCard = stock.topCard();
+    markGameBoard(0, topCard, CardProperties::CardStates::TOPSTOCK, CardProperties::CardStates::TOPSTOCK);
     while(!roundOver) {
         // Choose whether to take top stock card or top discard card
         initializeRandomNumberGenerator(1);
@@ -111,7 +121,8 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             stock.removeTopCard();
             players[turn].addCard(std::get<0>(topCard), std::get<1>(topCard));
             markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
-
+            topCard = stock.topCard();
+            markGameBoard(0, topCard, CardProperties::CardStates::TOPSTOCK, CardProperties::CardStates::TOPSTOCK);
         }
 
         // Display the opponents cards only if the no user is playing
@@ -155,7 +166,6 @@ std::pair<int, int> Game::playRound(const std::vector<bool> & whosPlaying) {
             discardIndex = generateRandomNumber();
             auto discardCard = tempPlayerCards[discardIndex];
             players[turn].makeMove(gameBoard, discardCard, discard);
-            markGameBoard(turn, topCard, CardProperties::CardStates::P1CARD, CardProperties::CardStates::P0CARD);
 
             // If player can knock, randomly choose to knock
             if (players[turn].canKnock()) {
@@ -201,6 +211,11 @@ void Game::gamePlay(const std::vector<bool>& whosPlaying) {
                     players[opponentIndex].setScore(opponentTotalUnmatchedValue - winnerTotalUnmatchedValue + 10);
                 }
             }
+        } else {
+            int player0sUnmatchedValue = players[0].getValueOfUnmatched();
+            int player1sUnmatchedValue = players[1].getValueOfUnmatched();
+            players[0].setScore(player0sUnmatchedValue);
+            players[1].setScore(player1sUnmatchedValue);
         }
 
         // Who is the user playing

@@ -20,6 +20,7 @@ public:
     int roundIsWon();
     bool gameIsWon();
     void markGameBoard(int playerTurn, const std::pair<int, int>& card, int possibleNewState1, int possibleNewState2);
+    void clearBoard();
 private:
     void printPlayerCards(std::ostream&, int turn);
     void initializeRandomNumberGenerator(int);

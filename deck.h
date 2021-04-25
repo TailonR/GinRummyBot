@@ -18,6 +18,7 @@ public:
     std::pair<int,int> topCard() const;
     void removeTopCard();
     void addCard(int, int);
+    void addCard(std::vector<std::vector<int>>&, int, int);
     bool isEmpty();
 
 private:

@@ -62,7 +62,7 @@ void Player::makeMove(std::vector<std::vector<int>>& gameBoard, const std::pair<
     discardCard(cardToDiscard);
 
     // Add that card to the discard pile
-    discardPile.addCard(std::get<0>(cardToDiscard), std::get<1>(cardToDiscard));
+    discardPile.addCard(gameBoard, std::get<0>(cardToDiscard), std::get<1>(cardToDiscard));
 
     // Now filter out the matched cards
     filterMatched();

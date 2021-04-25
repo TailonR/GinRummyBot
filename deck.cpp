@@ -7,7 +7,23 @@ Deck::Deck(bool stock): cards(createCardList(stock)) {}
 
 void Deck::addCard(int suit, int rank) {
     if(cards.size() < 52)
-        cards.emplace_back(suit, rank);
+        cards.insert(cards.begin(), std::make_pair(suit, rank));
+}
+
+void Deck::addCard(std::vector<std::vector<int>>& gameBoard, int suit, int rank) {
+    if(cards.size() < 52)
+        cards.insert(cards.begin(), std::make_pair(suit, rank));
+
+
+    for(int suitIndex = 0; suitIndex < gameBoard.size(); suitIndex++) {
+        for(int rankIndex = 0; rankIndex < gameBoard[0].size(); rankIndex++) {
+            if (gameBoard[suitIndex][rankIndex] == CardProperties::CardStates::TOPDISCARD) {
+                if (!(suitIndex == suit && rankIndex == rank)) {
+                    gameBoard[suitIndex][rankIndex] = CardProperties::CardStates::DISCARD;
+                }
+            }
+        }
+    }
 }
 
 std::vector<std::pair<int, int>> createCardList(bool stock) {
