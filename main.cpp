@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
                  "      2 - Spades\n"
                  "      3 - Clubs\n"
                  "Ranks are represented as numbers from 0 to 12\n"
-                 "      0 - A\n"
+                 "      1 - A\n"
                  "      10 - J\n"
                  "      11 - Q\n"
                  "      12 - K\n"
